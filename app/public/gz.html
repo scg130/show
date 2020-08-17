@@ -82,7 +82,7 @@
         const receiver = document.getElementById('receiver').value;
 
         socket = new WebSocket("ws://"+host+"/websocket?name=" + userName + "&receiver=" + receiver);
-
+        console.log(socket);
         socket.close = function () {
             console.log("连接关闭")
         }
@@ -104,24 +104,26 @@
                             "data": {
                                 "candidate": event.candidate
                             },
-                            name: userName,
-                            receiver: receiver,
+                            "name": userName,
+                            "receiver": receiver,
                         }));
                     }
                 };
 
                 var agent = navigator.userAgent.toLowerCase();
                 if (agent.indexOf("firefox") > 0) {
-                    pc.createAnswer().then(function (desc) {
+                    pc.createAnswer(function (desc) {
                         pc.setLocalDescription(desc);
                         socket.send(JSON.stringify({
                             "event": "__answer",
                             "data": {
                                 "sdp": desc
                             },
-                            name: userName,
-                            receiver: receiver,
+                            "name": userName,
+                            "receiver": receiver,
                         }));
+                    },function (err) {
+                        console.error(err);
                     });
                 } else {
                     pc.createAnswer(function (desc) {
@@ -131,16 +133,15 @@
                             "data": {
                                 "sdp": desc
                             },
-                            name: userName,
-                            receiver: receiver,
+                            "name": userName,
+                            "receiver": receiver,
                         }));
                     }, function (err) {
-                        alert(err);
+                        console.error(err);
                     });
                 }
             }
         };
-
 
     }
 
