@@ -30,6 +30,7 @@
 </body>
 
 <script type="text/javascript">
+    var host = window.location.host;
     document.onkeydown = function (e) { // 回车提交表单
         var theEvent = window.event || e;
         var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
@@ -83,7 +84,7 @@
             return
         }
 
-        socket = new WebSocket("ws://127.0.0.1:3000/websocket?name=" + zhubo);
+        socket = new WebSocket("ws://" + host + "/websocket?name=" + zhubo);
 
         getUserMedia.call(navigator, {
             "audio": true,
