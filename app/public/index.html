@@ -73,8 +73,27 @@
     }
 
     function communication() {
-        var pc = new PeerConnection(iceServer);
+        if (socket != null) {
+            return
+        }
 
+        var pc = new PeerConnection(iceServer);
+        pc.onconnectionstatechange = function (event) {
+            switch (pc.connectionState) {
+                case "connected":
+                    console.log("connect");
+                    break;
+                case "disconnected":
+                    console.log("disconnected");
+                    break;
+                case "failed":
+                    console.log("fail");
+                    break;
+                case "closed":
+                    console.log("close");
+                    break;
+            }
+        }
         const video = document.getElementById('video');
         pc.ontrack = function async(event) {
             video.srcObject = event.streams[0]
@@ -84,10 +103,23 @@
         const receiver = document.getElementById('receiver').value;
 
         socket = new WebSocket("wss://" + host + "/websocket?name=" + userName + "&receiver=" + receiver);
-        console.log(socket);
         socket.close = function () {
             console.log("连接关闭")
         }
+        socket.onopen = function () {
+            setInterval(function () {
+                if (socket.readyState == 1) { //connection
+                    socket.send(JSON.stringify({
+                        "event": "ping",
+                    }))
+                }
+                if (socket.readyState == 3) {//closed
+                    socket.close()
+                    window.location.href = window.location.href
+                }
+            }, 5000);
+        }
+
         //处理到来的信令
         socket.onmessage = function (event) {
             var json = JSON.parse(event.data);

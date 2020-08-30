@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
+var expire = time.Now().Add(time.Minute * 3)
 var users, anchors sync.Map
 var upgrader = websocket.Upgrader{}
 
@@ -42,6 +44,10 @@ func anchorBroadCast(anchor Anchor) {
 			anchors.Delete(anchor.Key)
 			return
 		}
+		anchor.Conn.SetReadDeadline(expire)
+		if mess.Data == nil {
+			continue
+		}
 		if mess.Event != "message" {
 			if user, ok := users.Load(mess.Receiver); ok {
 				user.(User).Conn.WriteJSON(Mess{
@@ -51,6 +57,8 @@ func anchorBroadCast(anchor Anchor) {
 					Receiver: mess.Receiver,
 				})
 			}
+		} else if mess.Event == "ping" {
+			continue
 		} else {
 			mess.Receiver = anchor.Key
 			messChan <- mess
@@ -67,15 +75,24 @@ func userBroadCast(u User) {
 			users.Delete(u.Key)
 			return
 		}
+		u.Conn.SetReadDeadline(expire)
+		if mess.Data == nil {
+			continue
+		}
 		if mess.Event != "message" {
 			if conn, ok := anchors.Load(mess.Receiver); ok {
-				conn.(Anchor).Conn.WriteJSON(Mess{
+				if err := conn.(Anchor).Conn.WriteJSON(Mess{
 					Event:    mess.Event,
 					Data:     mess.Data,
 					Name:     mess.Name,
 					Receiver: mess.Receiver,
-				})
+				}); err != nil {
+					conn.(Anchor).Conn.Close()
+					anchors.Delete(conn.(Anchor).Key)
+				}
 			}
+		} else if mess.Event == "ping" {
+			continue
 		} else {
 			messChan <- mess
 		}
@@ -115,8 +132,9 @@ func echo(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					log.Fatal(err)
 				}
+				go userBroadCast(user)
 			}
-			go userBroadCast(user)
+
 		} else {
 			users.Delete(query.Get("name"))
 			c.Close()
@@ -162,6 +180,12 @@ func main() {
 	go messHandler()
 	http.HandleFunc("/websocket", echo)
 	http.Handle("/", http.FileServer(http.Dir("./app/public")))
-	log.Println("Serving at localhost:3000...")
-	log.Fatal(http.ListenAndServeTLS("0.0.0.0:3000", "./scg130.com+3.pem","./scg130.com+3-key.pem",nil))
+	http.HandleFunc("/test", func(writer http.ResponseWriter, request *http.Request) {
+		anchors.Range(func(key, value interface{}) bool {
+			fmt.Println(key)
+			return true
+		})
+	})
+	log.Println("Serving at localhost:4000...")
+	log.Fatal(http.ListenAndServeTLS("0.0.0.0:4000", "./localhost+3.pem", "./localhost+3-key.pem", nil))
 }

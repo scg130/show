@@ -15,6 +15,7 @@
                 <span>主播名</span>
                 <input id="zhubo" type="text" />
                 <button onclick="connect()">开播</button>
+                <button onclick="closeVideo()">关播</button>
             </div>
         </div>
         <div style="width: 400px;height: auto;border: 1px solid black;float: left">
@@ -40,6 +41,10 @@
             send()
         }
     };
+
+    function closeVideo() {
+        window.location.href = window.location.href;
+    }
 
     const iceServer = {
         "iceServers": [{
@@ -92,7 +97,7 @@
             "video": true
         }, function (stream) {
             stream_two = stream;
-            video.srcObject = stream
+            video.srcObject = stream_two
         }, function (error) {
             alert("处理媒体流创建失败错误");
         });
@@ -100,6 +105,24 @@
 
         socket.close = function () {
             console.log("连接关闭")
+        }
+
+        socket.onerror = function () {
+            socket.close();
+        };
+
+        socket.onopen = function () {
+            setInterval(function () {
+                if (socket.readyState == 1) { //"connection"
+                    socket.send(JSON.stringify({
+                        "event": "ping",
+                    }))
+                }
+                if (socket.readyState == 3) { //"closed"
+                    socket.close()
+                    window.location.href = window.location.href
+                }
+            }, 5000);
         }
 
         //有浏览器建立视频连接
@@ -114,6 +137,26 @@
             } else if (json.name && json.name != null && !json.event) {
                 pc[json.name] = new PeerConnection(iceServer);
                 pc[json.name].addStream(stream_two);
+                pc[json.name].onconnectionstatechange = function (event) {
+                    switch (pc[json.name].connectionState) {
+                        case "connected":
+                            console.log("connect");
+                            break;
+                        case "disconnected":
+                            pc[json.name] = {}
+                            console.log("disconnect")
+                            break;
+                        case "failed":
+                            pc[json.name] = {}
+                            console.log("fail")
+                            break;
+                        case "closed":
+                            pc[json.name] = {}
+                            console.log("close")
+                            break;
+                    }
+                }
+
                 // 浏览器兼容
                 var agent = navigator.userAgent.toLowerCase();
                 if (agent.indexOf("firefox") > 0) {
