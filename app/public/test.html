@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <div class="view-wrap">
+      <h3>我是canvas图片文字合成组件</h3>
+      <img
+        id="img1"
+        src="https://res.pandateacher.com/5PL5MDZU1598768510712.jpg"
+        alt
+      />
+
+      <div>
+        <el-input
+          v-model="text"
+          placeholder="请输入内容"
+          style="width: 250px"
+        ></el-input>
+        <el-button type="primary" onclick="create()">合成</el-button>
+      </div>
+      <div id="photo" class="photo"></div>
+      <canvas v-show="false" ref="myCanvas" id="myCanvas"></canvas>
+    </div>
+
+    <script>
+      function create() {
+        let img1 = document.getElementById("img1");
+        let img1Height = img1.naturalHeight;
+        let canvas = document.getElementById("myCanvas");
+        let context = canvas.getContext("2d");
+        canvas.width = 800; // canvas画布宽度
+        canvas.height = 600; // canvas画布高度
+        context.drawImage(img1, 0, 0, 200, img1Height); // 加入图片1
+        context.fillStyle = "red"; // 设置文字的填充颜色
+        context.font = "italic 20px Georgia"; // 设置文字的填充样式
+        context.fillText("dfjsaklfjdklsjdfklajsfkladjskjs", 10, 140); // 在画布中添加文字
+        let newImg = new Image();
+
+        newImg.onload = function () {
+          newImg.src = canvas.toDataURL("image/jpg"); // canvas画布导出图片
+        };
+        document.getElementById("photo").append(newImg); // 将图片插入div中展示出来
+      }
+    </script>
+
+    <style lang="scss" scoped></style>
+  </body>
+</html>
