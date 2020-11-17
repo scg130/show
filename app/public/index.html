@@ -77,6 +77,13 @@
             return
         }
 
+        const userName = document.getElementById('userName').value;
+        const receiver = document.getElementById('receiver').value;
+        if (userName == "" || receiver == "") {
+            alert("请输入用户名！");
+            return
+        }
+
         var pc = new PeerConnection(iceServer);
         pc.onconnectionstatechange = function (event) {
             switch (pc.connectionState) {
@@ -98,9 +105,6 @@
         pc.ontrack = function async(event) {
             video.srcObject = event.streams[0]
         };
-
-        const userName = document.getElementById('userName').value;
-        const receiver = document.getElementById('receiver').value;
 
         socket = new WebSocket("wss://" + host + "/websocket?name=" + userName + "&receiver=" + receiver);
         socket.close = function () {

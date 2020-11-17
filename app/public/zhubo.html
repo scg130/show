@@ -14,7 +14,8 @@
             <div>
                 <span>主播名</span>
                 <input id="zhubo" type="text" />
-                <button onclick="connect()">开播</button>
+                <button onclick="connect('camera')">摄像头开播</button>
+                <button onclick="connect('Recording')">屏幕录制开播</button>
                 <button onclick="closeVideo()">关播</button>
             </div>
         </div>
@@ -54,8 +55,7 @@
             "username": "webrtc@live.com",
             "credential": "muazkh"
         }]
-    };
-    const getUserMedia = (navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia || navigator.msGetUserMedia);
+    }; 
     const PeerConnection = (window.PeerConnection ||
         window.webkitPeerConnection00 ||
         window.webkitRTCPeerConnection ||
@@ -83,8 +83,20 @@
         context.value = "";
     }
 
-    function connect() {
+    const displayMediaOptions = {
+           video:{
+               cursor: "never"
+           },
+           audio: false
+       }
+
+    function connect(type) {
         const zhubo = document.getElementById('zhubo').value;
+
+        if (zhubo == "") {
+            alert("请输入用户名")
+            return
+        }
 
         if (socket != null) {
             return
@@ -92,16 +104,27 @@
 
         socket = new WebSocket("wss://" + host + "/websocket?name=" + zhubo);
 
-        getUserMedia.call(navigator, {
-            "audio": true,
-            "video": true
-        }, function (stream) {
+        if (type == "Recording") {
+            navigator.mediaDevices.getDisplayMedia(displayMediaOptions).then(function(stream){
             stream_two = stream;
             video.srcObject = stream_two
-        }, function (error) {
-            alert("处理媒体流创建失败错误");
-        });
-
+            }).catch(function(error){
+                alert(error);
+            });  
+        } else if (type = "camera") {
+            var getUserMedia = (navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia || navigator.msGetUserMedia);
+            getUserMedia.call(navigator, {
+                "audio": true,
+                "video": true
+            }, function (stream) {
+                stream_two = stream;
+                video.srcObject = stream_two
+            }, function (error) {
+                alert("处理媒体流创建失败错误");
+            });
+        } else {
+            return
+        }
 
         socket.close = function () {
             console.log("连接关闭")
@@ -118,10 +141,10 @@
                         "event": "ping",
                     }))
                 }
-                if (socket.readyState == 3) { //"closed"
-                    socket.close()
-                    window.location.href = window.location.href
-                }
+                // if (socket.readyState == 3) { //"closed"
+                //     socket.close()
+                //     window.location.href = window.location.href
+                // }
             }, 5000);
         }
 
