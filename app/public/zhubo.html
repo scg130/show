@@ -94,7 +94,11 @@
         video: {
         cursor: "always"
         },
-        audio: false
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            sampleRate: 44100
+        }
     }   
 
     function connect(type) {
@@ -112,19 +116,19 @@
         socket = new WebSocket("wss://" + host + "/websocket?name=" + zhubo);
 
         if (type == "Recording") {
-            navigator.mediaDevices.getDisplayMedia(options).then(function(stream){
-            stream_two = stream;
-            video.srcObject = stream_two
+                navigator.mediaDevices.getDisplayMedia(options).then(function(stream){
+                stream_two = stream;
             }).catch(function(error){
                 alert(error);
-            });  
+            });
         } else if (type = "camera") {
             var getUserMedia = (navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia || navigator.msGetUserMedia);
             getUserMedia.call(navigator, {
                 "audio": true,
                 "video": true
             }, function (stream) {
-                stream_two = stream;
+                stream_two = stream;                video.srcObject = stream_two;
+
                 video.srcObject = stream_two
             }, function (error) {
                 alert("处理媒体流创建失败错误");
