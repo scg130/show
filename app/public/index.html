@@ -74,7 +74,8 @@
 
     function communication() {
         if (socket != null) {
-            return
+            socket = null;
+            return;
         }
 
         const userName = document.getElementById('userName').value;
@@ -117,10 +118,10 @@
                         "event": "ping",
                     }))
                 }
-                if (socket.readyState == 3) {//closed
-                    socket.close()
-                    window.location.href = window.location.href
-                }
+                // if (socket.readyState == 3) {//closed
+                //     socket.close()
+                //     window.location.href = window.location.href
+                // }
             }, 5000);
         }
 

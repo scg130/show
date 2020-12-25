@@ -87,8 +87,15 @@
            video:{
                cursor: "never"
            },
-           audio: false
+           audio: true
        }
+
+    const options = {
+        video: {
+        cursor: "always"
+        },
+        audio: false
+    }   
 
     function connect(type) {
         const zhubo = document.getElementById('zhubo').value;
@@ -105,7 +112,7 @@
         socket = new WebSocket("wss://" + host + "/websocket?name=" + zhubo);
 
         if (type == "Recording") {
-            navigator.mediaDevices.getDisplayMedia(displayMediaOptions).then(function(stream){
+            navigator.mediaDevices.getDisplayMedia(options).then(function(stream){
             stream_two = stream;
             video.srcObject = stream_two
             }).catch(function(error){
